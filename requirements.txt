@@ -1,0 +1,13 @@
+aiohttp~=3.8.1
+sqlalchemy==1.4.37
+alembic~=1.7.7
+psycopg2~=2.9.3
+configargparse~=1.5.3
+marshmallow~=3.16.0
+aiohttp_apispec~=2.2.3
+asyncpg~=0.25.0
+aiomisc~=16.0.13
+setproctitle~=1.2.3
+
+setuptools~=57.0.0
+yarl~=1.7.2
