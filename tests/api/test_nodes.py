@@ -9,6 +9,7 @@ from megamarket.utils.testing import generate_offer, generate_response_offer, ge
 date = datetime.now()
 
 CASES = [
+    # Один оффер
     (
         'offer-1',
         [
@@ -17,6 +18,7 @@ CASES = [
         generate_response_offer(unit_id='offer-1', name='offer-1', price=19999, date=date)
     ),
 
+    # Многократная вложенность
     (
         'category-1',
         [
@@ -38,6 +40,7 @@ CASES = [
             ])
     ),
 
+    # Пустая категория
     (
         'category-1',
         [
@@ -55,8 +58,6 @@ async def test_get_nodes(api_client, offer_id, units, expected_unit):
     resp = await get_unit(api_client, offer_id)
 
     resp = normalize_response_unit(resp)
-
-    print(resp)
 
     assert compare_units(resp, expected_unit)
 
