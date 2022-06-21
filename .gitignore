@@ -131,3 +131,6 @@ dmypy.json
 # PyCharm
 **/.idea/workspace.xml
 **/.idea/tasks.xml
+
+/tests/expected.json
+/tests/response.json

@@ -14,12 +14,16 @@ from megamarket.api.handlers import HANDLERS
 from megamarket.api.middleware import error_middleware, handle_validation_error
 from megamarket.api.payloads import JsonPayload, AsyncStreamJsonPayload
 
+MEGABYTE = 1024 ** 1024
+MAX_REQUEST_SIZE = 5 * MEGABYTE
+
 
 log = logging.getLogger(__name__)
 
 
 def create_app(args: Namespace) -> Application:
     app = Application(
+        client_max_size=MAX_REQUEST_SIZE,
         middlewares=[error_middleware, validation_middleware]
     )
 

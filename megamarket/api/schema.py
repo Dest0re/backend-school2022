@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from marshmallow import validates_schema, ValidationError
 from marshmallow.schema import Schema
 from marshmallow.fields import String, Integer, DateTime, Nested, List, Boolean, Dict
@@ -16,8 +18,19 @@ class ShopUnitSchema(Schema):
     type = String(required=True, validate=OneOf([unit_type.value for unit_type in ShopUnitType]))
 
     parentId = String(required=False, allow_none=True, validate=Length(min=1))
-    price = Integer(required=False, validate=Range(min=0))
-    children = List(Nested(lambda: ShopUnitSchema()), required=False)
+    price = Integer(required=False, allow_none=True, validate=Range(min=0))
+    children = List(Nested(lambda: ShopUnitSchema()), required=False, allow_none=True)
+
+    @validates_schema
+    def validate_parent_is_not_self(self, data, **_):
+        if data['parentId'] is not None and data['parentId'] == data['id']:
+            raise ValidationError('Parent cannot be itself')
+
+    @validates_schema
+    def validate_date(self, data, **_):
+        if 'date' in data:
+            if data['date'] > datetime.now():
+                raise ValidationError('Date cannot be in future')
 
 
 class ShopUnitImportSchema(Schema):
@@ -26,13 +39,18 @@ class ShopUnitImportSchema(Schema):
     type = String(required=True, validate=OneOf([unit_type.value for unit_type in ShopUnitType]))
 
     parentId = String(required=False, allow_none=True, validate=Length(min=1))
-    price = Integer(required=False, validate=Range(min=0), allow_none=True)
+    price = Integer(required=False, allow_none=True, validate=Range(min=0))
 
     @validates_schema
     def validate_category_price(self, data, **_):
         if data['type'] == ShopUnitType.CATEGORY.value and 'price' in data:
             if data['price'] is not None:
                 raise ValidationError('Price is not allowed for categories')
+
+    @validates_schema
+    def validate_parent_is_not_self(self, data, **_):
+        if data['parentId'] is not None and data['parentId'] == data['id']:
+            raise ValidationError('Parent cannot be itself')
 
 
 class ShopUnitImportRequestSchema(Schema):
@@ -46,6 +64,12 @@ class ShopUnitImportRequestSchema(Schema):
             if item['id'] in items:
                 raise ValidationError('Duplicate item')
             items.add(item['id'])
+
+    @validates_schema
+    def validate_date(self, data, **_):
+        if 'updateDate' in data:
+            if data['updateDate'] > datetime.now():
+                raise ValidationError('Date cannot be in future')
 
 
 class SalesRequestParamsSchema(Schema):
@@ -70,7 +94,18 @@ class ShopUnitStatisticUnitSchema(Schema):
     date = DateTime(required=True, format=DATETIME_FORMAT)
 
     parentId = String(required=False, allow_none=True, validate=Length(min=1))
-    price = Integer(required=False, validate=Range(min=0), strict=True)
+    price = Integer(required=False, allow_none=True, validate=Range(min=0))
+
+    @validates_schema
+    def validate_parent_is_not_self(self, data, **_):
+        if data['parentId'] is not None and data['parentId'] == data['id']:
+            raise ValidationError('Parent cannot be itself')
+
+    @validates_schema
+    def validate_date(self, data, **_):
+        if 'date' in data:
+            if data['date'] > datetime.now():
+                raise ValidationError('Date cannot be in future')
 
 
 class ShopUnitStatisticResponseSchema(Schema):

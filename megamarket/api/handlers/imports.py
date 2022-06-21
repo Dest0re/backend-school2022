@@ -8,7 +8,6 @@ from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPOk
 from aiohttp_apispec.decorators import request_schema, response_schema
 from aiomisc import chunk_list
-from asyncpgsa import PG
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncTransaction, AsyncConnection
@@ -89,7 +88,8 @@ class ImportsView(BaseView):
 
     @classmethod
     async def make_relations_table_rows(cls, units, pg: AsyncConnection):
-        relations = [(unit['id'], unit['parentId']) for unit in units if 'parentId' in unit and unit['parentId'] is not None]
+        relations = [(unit['id'], unit['parentId'])
+                     for unit in units if 'parentId' in unit and unit['parentId'] is not None]
         chunked_children_ids = chunk_list(relations, cls.MAX_SINGLE_ROW_WHERE)
 
         relation_rows = []
@@ -112,14 +112,20 @@ class ImportsView(BaseView):
     @request_schema(schema=ShopUnitImportRequestSchema)
     async def post(self):
         params = self.request['data']
-        units = params['items']
 
-        if not units:
+        if 'items' not in params or not params['items']:
             return Response(status=HTTPOk.status_code)
 
-        async with self.pg.begin() as conn:#isolation='serializable'):
+        units = params['items']
+
+        if 'updateDate' not in params:
+            update_date = datetime.now()
+        else:
+            update_date = params['updateDate']
+
+        async with self.pg.execution_options(isolation_level='SERIALIZABLE').begin() as conn:
             shop_unit_ids_rows = self.make_shop_units_ids_rows(units)
-            shop_unit_revisions_rows = self.make_units_table_rows(units, params['updateDate'])
+            shop_unit_revisions_rows = self.make_units_table_rows(units, update_date)
 
             chunked_unit_ids_rows = chunk_list(shop_unit_ids_rows,
                                                self.MAX_UNIT_IDS_PER_INSERT)

@@ -1,0 +1,16 @@
+pylama==8.3.8
+sqlalchemy-utils~=0.38.2
+pytest==7.1.2
+pytest-aiohttp==1.0.4
+pytest-cov==3.0.0
+
+alembic~=1.7.7
+SQLAlchemy~=1.4.37
+yarl~=1.7.2
+setuptools~=57.0.0
+ConfigArgParse~=1.5.3
+aiohttp~=3.8.1
+aiomisc~=16.0.13
+asyncpg~=0.25.0
+marshmallow~=3.16.0
+setproctitle~=1.2.3

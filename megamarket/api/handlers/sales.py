@@ -4,12 +4,10 @@ from collections.abc import AsyncIterable
 from datetime import datetime, timedelta
 
 from aiohttp.web import Response
-from aiohttp.web_exceptions import HTTPNotFound
-from aiohttp_apispec import request_schema
 from aiohttp_apispec.decorators import response_schema
 from sqlalchemy import select
 from sqlalchemy.sql import func
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .base import BaseView
 from megamarket.api.schema import ShopUnitStatisticResponseSchema, SalesRequestParamsSchema
@@ -64,7 +62,8 @@ class GetSalesQuery(AsyncIterable):
                     first = False
 
                 unit = shop_unit_streamer_from_record(revision, conn,
-                                                      self._from_date, self._to_date)
+                                                      self._from_date, self._to_date,
+                                                      stream_children=False)
 
                 async for chunk in do_stream(unit):
                     if self.timeout and time.time() - exec_time > self.timeout:

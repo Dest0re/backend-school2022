@@ -88,7 +88,8 @@ class GetNodeStatistic(AsyncIterable):
                 if not unit:
                     continue
 
-                unit_streamer = shop_unit_streamer_from_record(unit, conn, None, date)
+                unit_streamer = shop_unit_streamer_from_record(unit, conn, None, date,
+                                                               stream_children=False)
 
                 exec_time = time.time()
                 async for chunk in do_stream(unit_streamer):
