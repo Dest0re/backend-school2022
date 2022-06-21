@@ -1,5 +1,6 @@
 import datetime
 import json
+import logging
 import math
 import random
 import uuid
@@ -385,7 +386,8 @@ class ResponseUnit:
             parent_id: str | None = None,
             unit_type: str | None = None,
             children: list | None = None,
-            include_children: bool = True
+            include_children: bool = True,
+            children_count: int | None = None
     ):
         self.unit_id = unit_id or str(uuid.uuid4())
 
@@ -393,9 +395,9 @@ class ResponseUnit:
 
         self.date = date or datetime.datetime.now()
 
-        self.price = price or None
+        self.price = price
 
-        self.parent_id = parent_id or None
+        self.parent_id = parent_id
 
         self.unit_type = unit_type or random.choice(['CATEGORY', 'OFFER'])
 
@@ -403,25 +405,10 @@ class ResponseUnit:
 
         self.include_children = include_children
 
-        self.children_count = 1
+        self.children_count = children_count or 1
 
     def json(self):
-        data = {
-            'id': self.unit_id,
-            'name': self.name,
-            'date': self.date.strftime(DATETIME_FORMAT),
-            'price': self.price,
-            'parentId': self.parent_id,
-            'type': self.unit_type,
-        }
-
-        if self.include_children:
-            if self.children is not None:
-                data['children'] = normalize_response_units(self.children)
-            else:
-                data['children'] = None
-
-        return data
+        raise NotImplementedError
 
     def __str__(self):
         return json.dumps(self.json(), ensure_ascii=False, indent=2)
@@ -459,9 +446,9 @@ class ResponseOffer(ResponseUnit):
 
         self.unit_type = 'OFFER'
 
-        self.children_count = 1
-
         self.children = None
+
+        children_count = 1
 
         super(ResponseOffer, self).__init__(
             unit_id=unit_id,
@@ -471,8 +458,24 @@ class ResponseOffer(ResponseUnit):
             parent_id=parent_id,
             unit_type=self.unit_type,
             children=None,
-            include_children=include_children
+            include_children=include_children,
+            children_count=children_count
         )
+
+    def json(self):
+        data = {
+            'id': self.unit_id,
+            'name': self.name,
+            'date': self.date.strftime(DATETIME_FORMAT),
+            'price': self.price,
+            'parentId': self.parent_id,
+            'type': self.unit_type,
+        }
+
+        if self.include_children:
+            data['children'] = None
+
+        return data
 
 
 class ResponseCategory(ResponseUnit):
@@ -504,10 +507,10 @@ class ResponseCategory(ResponseUnit):
         unit_type = 'CATEGORY'
 
         if children:
-            self.children_count = sum(child.children_count for child in children)
+            children_count = sum(child.children_count for child in children)
             price = sum(child.price for child in children)
         else:
-            self.children_count = 0
+            children_count = 0
             price = None
 
         super(ResponseCategory, self).__init__(
@@ -518,7 +521,8 @@ class ResponseCategory(ResponseUnit):
             unit_type=unit_type,
             children=children,
             include_children=include_children,
-            price=price
+            price=price,
+            children_count=children_count,
         )
 
     def json(self):
@@ -562,9 +566,10 @@ def generate_response_offer(
         name: str = None,
         date: datetime.datetime | None = None,
         price: int | None = None,
-        parent_id: str | None = None
+        parent_id: str | None = None,
+        include_children: bool = True
 ):
-    return ResponseOffer(unit_id, name, date, price, parent_id)
+    return ResponseOffer(unit_id, name, date, price, parent_id, include_children)
 
 
 def generate_response_category(
@@ -573,8 +578,9 @@ def generate_response_category(
         date: datetime.datetime | None = None,
         parent_id: str | None = None,
         children: list | None = None,
+        include_children: bool = True
 ):
-    return ResponseCategory(unit_id, name, date, parent_id, children)
+    return ResponseCategory(unit_id, name, date, parent_id, children, include_children)
 
 
 def normalize_response_unit(unit: dict | ResponseUnit):
@@ -595,3 +601,7 @@ def normalize_response_units(units: list[dict | ResponseUnit]) -> list:
     units = list(map(normalize_response_unit, units))
 
     return sorted(units, key=lambda x: (x['id'], x['date']))
+
+
+def compare_unit_lists(left: list, right: list):
+    return normalize_response_units(left) == normalize_response_units(right)

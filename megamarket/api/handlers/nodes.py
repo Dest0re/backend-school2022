@@ -34,7 +34,8 @@ class GetShopUnitQuery(AsyncIterable):
                 raise KeyError
 
             unit = shop_unit_streamer_from_record(unit, conn,
-                                                  self._from_date, self._to_date)
+                                                  self._from_date, self._to_date,
+                                                  stream_children=True)
 
             exec_time = time.time()
             async for chunk in do_stream(unit):
