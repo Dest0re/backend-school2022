@@ -61,7 +61,7 @@ class ShopUnitImportSchema(Schema):
 
 class ShopUnitImportRequestSchema(Schema):
     items = List(Nested(ShopUnitImportSchema()), required=False)
-    updateDate = DateTime(required=False, format=DATETIME_FORMAT)
+    updateDate = DateTime(required=True, format=DATETIME_FORMAT)
 
     @validates_schema
     def validate_items(self, data, **_):
