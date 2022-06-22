@@ -17,8 +17,8 @@ docker run -it \
 ### Запустить REST API веб-сервер на порту 8081:
 ```shell
 docker run -it -p 8081:8081 \
-    -e MEGAMARKET_PG_URL=postgresql://user:megamarket@localhost/megamarket \
-    dest0re/megamarket
+    -e MEGAMARKET_PG_URL=postgresql://user:strngpsswrd@localhost/megamarket \
+    dest0re/megamarket megamarket-api
 ```
 
 ### Получить список команд:
