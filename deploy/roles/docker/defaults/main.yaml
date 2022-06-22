@@ -1,0 +1,8 @@
+---
+
+docker_daemon_config:
+  'log-driver': journald
+
+  'dns':
+    - 77.88.8.8
+    - 77.88.8.1

@@ -1,0 +1,44 @@
+- name: create directory for megamarket app
+  file:
+    path: /etc/docker/compose/megamarket
+    state: directory
+    mode: 0770
+    owner: root
+    group: docker
+
+- name: deploy docker-compose.yaml for megamarket app
+  template:
+    src: docker-compose.yaml.j2
+    dest: /etc/docker/compose/megamarket/docker-compose.yaml
+    mode: 0640
+    owner: root
+    group: docker
+  notify:
+    - restart megamarket
+
+- name: start & enable megamarket service
+  service:
+    name: docker-compose@megamarket
+    enabled: yes
+    state: started
+
+- name: install python modules
+  apt:
+    name:
+      - python3-docker
+    update_cache: yes
+
+- name: flush handlers
+  meta: flush_handlers
+
+- name: apply database migrations
+  docker_container:
+    name: db_migrator
+    image: "{{ megamarket_image }}"
+    command: ["megamarket-db", "upgrade", "heads"]
+    networks:
+      - name: megamarket_default
+    auto_remove: yes
+    networks_cli_compatible: yes
+    env:
+      MEGAMARKET_PG_URL: postgresql://{{ megamarket_pg_user }}:{{ megamarket_pg_password }}@postgres/{{ megamarket_pg_dbname }}

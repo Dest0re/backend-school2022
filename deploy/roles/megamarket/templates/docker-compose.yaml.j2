@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  postgres:
+    restart: always
+    image: postgres:14
+    environment:
+      POSTGRES_USER: {{ megamarket_pg_user }}
+      POSTGRES_PASSWORD: {{ megamarket_pg_password }}
+      POSTGRES_DB: {{ megamarket_pg_dbname }}
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+
+  megamarket:
+    restart: always
+    image: {{ megamarket_image }}
+    command: megamarket-api
+    ports:
+      - { { megamarket_api_port } }:8081
+    environment:
+      MEGAMARKET_PG_URL: postgresql://{{ megamarket_pg_user }}:{{ megamarket_pg_password }}@postgres/{{ megamarket_pg_dbname }}

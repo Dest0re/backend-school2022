@@ -1,0 +1,6 @@
+---
+
+- name: restart megamarket
+  service:
+    name: docker-compose@megamarket
+    state: restarted
