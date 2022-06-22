@@ -1,7 +1,6 @@
 import os
-from pathlib import Path
 
-from alembic.config import CommandLine, Config
+from alembic.config import CommandLine
 
 from megamarket.utils.pg import DEFAULT_PG_URL, make_alembic_config
 

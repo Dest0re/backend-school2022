@@ -1,15 +1,13 @@
 import datetime
+import json
 import typing
 from functools import singledispatch, partial
-import json
 
-import aiohttp
-from asyncpg import Record
-from aiohttp.payload import PAYLOAD_REGISTRY, JsonPayload as BaseJsonPayload, Payload
+from aiohttp.payload import JsonPayload as BaseJsonPayload, Payload
 from aiohttp.typedefs import JSONEncoder
+from asyncpg import Record
 
 from megamarket.api.schema import DATETIME_FORMAT, ShopUnitType
-
 
 __all__ = (
     'JsonPayload'

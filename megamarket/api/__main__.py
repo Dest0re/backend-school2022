@@ -1,17 +1,16 @@
 import logging
 import os
-import sys
-import socket
 import pwd
+import sys
 
 from aiohttp import web
-from configargparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from yarl import URL
 from aiomisc.utils import bind_socket
+from configargparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from setproctitle import setproctitle
+from yarl import URL
 
-from megamarket.utils.argparse import positive_int, clear_environ
 from megamarket.api.app import create_app
+from megamarket.utils.argparse import positive_int
 from megamarket.utils.pg import DEFAULT_PG_URL
 
 ENV_VAR_PREFIX = 'MEGAMARKET_'

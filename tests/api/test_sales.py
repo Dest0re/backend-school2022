@@ -1,9 +1,6 @@
 import datetime
 
-import pytest
-
-from megamarket.utils.testing import generate_offer, generate_response_offer, get_sales, import_data, compare_units, \
-    compare_unit_lists
+from megamarket.utils.testing import generate_offer, generate_response_offer, get_sales, import_data, compare_unit_lists
 
 date = datetime.datetime.now()
 

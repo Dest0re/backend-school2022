@@ -1,22 +1,21 @@
-import asyncio
 from datetime import datetime
-from typing import Generator, Callable, Coroutine, Any
+from typing import Generator
 
 import asyncpg
 import sqlalchemy
 from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPOk
-from aiohttp_apispec.decorators import request_schema, response_schema
+from aiohttp_apispec.decorators import request_schema
 from aiomisc import chunk_list
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncTransaction, AsyncConnection
+from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.sql import func
 
-from .base import BaseView
+from megamarket.api.schema import ShopUnitImportRequestSchema
 from megamarket.db.schema import relations_table, shop_unit_revisions_table, shop_unit_ids_table
-from megamarket.api.schema import ShopUnitImportRequestSchema, DATETIME_FORMAT
-from megamarket.utils.pg import MAX_QUERY_ARGS, max_query_len_with
+from megamarket.utils.pg import max_query_len_with
+from .base import BaseView
 
 
 class ImportsView(BaseView):

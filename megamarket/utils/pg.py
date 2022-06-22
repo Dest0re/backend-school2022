@@ -7,10 +7,7 @@ from types import SimpleNamespace
 from aiohttp.web import Application
 from alembic.config import Config
 from sqlalchemy import text
-from sqlalchemy.dialects.postgresql.asyncpg import dialect
 from sqlalchemy.ext.asyncio import create_async_engine
-from yarl import URL
-
 
 CENSORED = '***'
 MAX_QUERY_ARGS = 32767

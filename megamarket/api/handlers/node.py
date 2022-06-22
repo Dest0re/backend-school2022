@@ -7,14 +7,13 @@ from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp_apispec.decorators import response_schema
 from aiomisc import chunk_list
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection
 
-from .base import BaseView
 from megamarket.api.schema import ShopUnitSchema, ShopUnitStatisticsRequestParamsSchema
+from .base import BaseView
 from ...db.schema import ShopUnitType, shop_unit_revisions_table
-from ...utils.streamers import ShopUnitStreamer, ShopCategoryStreamer, shop_unit_streamer_from_record, do_stream
 from ...utils.pg import max_query_len_with
+from ...utils.streamers import ShopUnitStreamer, ShopCategoryStreamer, shop_unit_streamer_from_record, do_stream
 
 
 class GetNodeStatistic(AsyncIterable):

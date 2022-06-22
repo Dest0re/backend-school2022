@@ -1,12 +1,11 @@
 from datetime import datetime
 
 from marshmallow import validates_schema, ValidationError
+from marshmallow.fields import String, Integer, DateTime, Nested, List, Dict
 from marshmallow.schema import Schema
-from marshmallow.fields import String, Integer, DateTime, Nested, List, Boolean, Dict
 from marshmallow.validate import OneOf, Range, Length
 
 from megamarket.db.schema import ShopUnitType
-
 
 DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.000Z"
 
