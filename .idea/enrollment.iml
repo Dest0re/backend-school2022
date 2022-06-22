@@ -12,4 +12,11 @@
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="requirements.dev.txt" />
   </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/megamarket/db/alembic" />
+      </list>
+    </option>
+  </component>
 </module>
