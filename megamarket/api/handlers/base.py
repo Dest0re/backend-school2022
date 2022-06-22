@@ -2,7 +2,6 @@ from json import JSONDecodeError
 
 from aiohttp.web_exceptions import HTTPBadRequest
 from aiohttp.web_urldispatcher import View
-from asyncpgsa import PG
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 

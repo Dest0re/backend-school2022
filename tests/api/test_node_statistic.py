@@ -64,7 +64,13 @@ CASES = [
                 [
                     generate_offer(unit_id='o-1', name='o-1', parent_id='c-1', price=123321)
                 ],
-                date - datetime.timedelta(hours=2)
+                date - datetime.timedelta(hours=2),
+            ),
+            (
+                [
+                    generate_offer(unit_id='o-1', name='o-2', parent_id='c-1', price=123321)
+                ],
+                date - datetime.timedelta(hours=1)
             ),
         ],
         [
@@ -74,10 +80,15 @@ CASES = [
             generate_response_category(
                 unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=2), include_children=False,
                 children=[
-                    generate_response_offer(unit_id='o-1', name='o-1', parent_id='c-1', price=123321, include_children=False,
-                                            date=date - datetime.timedelta(hours=2))
+                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=2), price=123321)
                 ]
-            )
+            ),
+            generate_response_category(
+                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=1), include_children=False,
+                children=[
+                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=1), price=123321)
+                ]
+            ),
         ]
     )
 ]

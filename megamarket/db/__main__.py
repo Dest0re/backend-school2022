@@ -16,9 +16,12 @@ def main():
 
     options = alembic.parser.parse_args()
 
-    config = make_alembic_config(options)
-
-    exit(alembic.run_cmd(config, options))
+    if 'cmd' not in options:
+        alembic.parser.error('Too few arguments')
+        exit(128)
+    else:
+        config = make_alembic_config(options)
+        exit(alembic.run_cmd(config, options))
 
 
 if __name__ == '__main__':
