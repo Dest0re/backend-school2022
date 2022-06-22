@@ -17,6 +17,7 @@ FROM snakepacker/python:3.10 as api
 
 COPY --from=builder /usr/share/python3/app /usr/share/python3/app
 
+RUN apt-get update && apt-get install libpq5 -y
 RUN ln -snf /usr/share/python3/app/bin/megamarket-* /usr/local/bin/
 
 CMD ["megamarket-db"]
