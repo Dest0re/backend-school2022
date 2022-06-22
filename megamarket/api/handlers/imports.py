@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Generator
 
 import asyncpg
@@ -74,18 +73,6 @@ class ImportsView(BaseView):
         return query
 
     @classmethod
-    async def insert_revisions(cls, units, date, pg: AsyncConnection):
-        unit_revision_rows = cls.make_units_table_rows(units, date)
-
-        chunked_unit_rows = chunk_list(unit_revision_rows,
-                                       cls.MAX_UNIT_REVISIONS_PER_INSERT)
-
-        insert_statement = shop_unit_revisions_table.insert()
-
-        for chunk in chunked_unit_rows:
-            await pg.execute(insert_statement, list(chunk))
-
-    @classmethod
     async def make_relations_table_rows(cls, units, pg: AsyncConnection):
         relations = [(unit['id'], unit['parentId'])
                      for unit in units if 'parentId' in unit and unit['parentId'] is not None]
@@ -108,6 +95,55 @@ class ImportsView(BaseView):
 
         return relation_rows
 
+    @classmethod
+    async def insert_unit_ids(cls, conn, units):
+        shop_unit_ids_rows = cls.make_shop_units_ids_rows(units)
+
+        chunked_unit_ids_rows = chunk_list(shop_unit_ids_rows,
+                                           cls.MAX_UNIT_IDS_PER_INSERT)
+
+        insert_statement = insert(shop_unit_ids_table).on_conflict_do_nothing()
+        for chunk in chunked_unit_ids_rows:
+            await conn.execute(insert_statement.values(list(chunk)))
+
+    @classmethod
+    async def insert_revisions(cls, conn, units, update_date):
+        shop_unit_revisions_rows = cls.make_units_table_rows(units, update_date)
+
+        chunked_unit_revisions_rows = chunk_list(shop_unit_revisions_rows,
+                                                 cls.MAX_UNIT_REVISIONS_PER_INSERT)
+
+        try:
+            insert_statement = shop_unit_revisions_table.insert()
+            for chunk in chunked_unit_revisions_rows:
+                await conn.execute(insert_statement.values(list(chunk)))
+        except sqlalchemy.exc.IntegrityError:
+            raise HTTPBadRequest()
+        except sqlalchemy.exc.DBAPIError as e:
+            if e.orig.sqlstate == asyncpg.exceptions.RaiseError.sqlstate:
+                raise HTTPBadRequest()
+
+            raise
+
+    @classmethod
+    async def insert_relations(cls, conn, units):
+        try:
+            relation_rows = await cls.make_relations_table_rows(units, conn)
+            chunked_relation_rows = chunk_list(relation_rows, cls.MAX_RELATIONS_PER_INSERT)
+
+            insert_statement = relations_table.insert()
+            for chunk in chunked_relation_rows:
+                await conn.execute(insert_statement.values(list(chunk)))
+        except asyncpg.exceptions.RaiseError:
+            raise HTTPBadRequest()
+        except sqlalchemy.exc.IntegrityError:
+            raise HTTPBadRequest()
+        except sqlalchemy.exc.DBAPIError as e:
+            if e.orig.sqlstate == asyncpg.exceptions.ObjectNotInPrerequisiteStateError.sqlstate:
+                raise HTTPBadRequest()
+
+            raise
+
     @request_schema(schema=ShopUnitImportRequestSchema)
     async def post(self):
         params = self.request['data']
@@ -117,52 +153,13 @@ class ImportsView(BaseView):
 
         units = params['items']
 
-        if 'updateDate' not in params:
-            update_date = datetime.now()
-        else:
-            update_date = params['updateDate']
+        update_date = params['updateDate']
 
         async with self.pg.execution_options(isolation_level='SERIALIZABLE').begin() as conn:
-            shop_unit_ids_rows = self.make_shop_units_ids_rows(units)
-            shop_unit_revisions_rows = self.make_units_table_rows(units, update_date)
 
-            chunked_unit_ids_rows = chunk_list(shop_unit_ids_rows,
-                                               self.MAX_UNIT_IDS_PER_INSERT)
-            chunked_unit_revisions_rows = chunk_list(shop_unit_revisions_rows,
-                                                     self.MAX_UNIT_REVISIONS_PER_INSERT)
-
-            insert_statement = insert(shop_unit_ids_table).on_conflict_do_nothing()
-            for chunk in chunked_unit_ids_rows:
-                await conn.execute(insert_statement.values(list(chunk)))
-
-            try:
-                insert_statement = shop_unit_revisions_table.insert()
-                for chunk in chunked_unit_revisions_rows:
-                    await conn.execute(insert_statement.values(list(chunk)))
-            except sqlalchemy.exc.IntegrityError:
-                raise HTTPBadRequest()
-            except sqlalchemy.exc.DBAPIError as e:
-                if e.orig.sqlstate == asyncpg.exceptions.RaiseError.sqlstate:
-                    raise HTTPBadRequest()
-
-                raise
-
-            try:
-                relation_rows = await self.make_relations_table_rows(units, conn)
-                chunked_relation_rows = chunk_list(relation_rows, self.MAX_RELATIONS_PER_INSERT)
-
-                insert_statement = relations_table.insert()
-                for chunk in chunked_relation_rows:
-                    await conn.execute(insert_statement.values(list(chunk)))
-            except asyncpg.exceptions.RaiseError:
-                raise HTTPBadRequest()
-            except sqlalchemy.exc.IntegrityError:
-                raise HTTPBadRequest()
-            except sqlalchemy.exc.DBAPIError as e:
-                if e.orig.sqlstate == asyncpg.exceptions.ObjectNotInPrerequisiteStateError.sqlstate:
-                    raise HTTPBadRequest()
-
-                raise
+            await self.insert_unit_ids(conn, units)
+            await self.insert_revisions(conn, units, update_date)
+            await self.insert_relations(conn, units)
 
             await conn.commit()
 

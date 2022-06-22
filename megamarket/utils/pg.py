@@ -36,7 +36,7 @@ async def setup_pg(app: Application, args: Namespace):
 
     app['pg'] = create_async_engine(
         str(pg_url),
-        #echo=True
+        # echo=True
     )
 
     async with app['pg'].begin() as conn:
@@ -54,7 +54,8 @@ async def setup_pg(app: Application, args: Namespace):
         log.info('Disconnected from database %s', db_info)
 
 
-def make_alembic_config(cmd_opts: Namespace | SimpleNamespace, project_dir: str = str(PROJECT_PATH)) -> Config:
+def make_alembic_config(cmd_opts: Namespace | SimpleNamespace,
+                        project_dir: str = str(PROJECT_PATH)) -> Config:
     if not os.path.isabs(cmd_opts.config):
         cmd_opts.config = os.path.join(project_dir, cmd_opts.config)
 

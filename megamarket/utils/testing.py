@@ -190,7 +190,7 @@ def generate_categories(
         for _ in range(random.randint(1, math.ceil(count / nesting))):
             category.append(generate_category(
                 name=name,
-                parent_id=None if i == 0 else random.choice(nested_categories[i-1])['id'],
+                parent_id=None if i == 0 else random.choice(nested_categories[i - 1])['id'],
             ))
 
     flat_categories = []
@@ -557,7 +557,8 @@ def generate_response_unit(
         children: list | None = None,
         include_children: bool = True
 ):
-    return ResponseUnit(unit_id, name, date, price, parent_id, unit_type, children, include_children)
+    return ResponseUnit(unit_id, name, date, price, parent_id, unit_type, children,
+                        include_children)
 
 
 def generate_response_offer(

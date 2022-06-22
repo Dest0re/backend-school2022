@@ -11,7 +11,7 @@ class DeleteView(BaseView):
     async def delete(self):
         unit_id = self.request.match_info['id']
 
-        async with self.pg.begin() as conn:#isolation='serializable'):
+        async with self.pg.execution_options(isolation_level='SERIALIZABLE').begin() as conn:
             query = shop_unit_ids_table.select().where(shop_unit_ids_table.c.id == unit_id)
 
             result = await conn.execute(query)

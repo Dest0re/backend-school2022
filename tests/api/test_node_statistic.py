@@ -3,7 +3,8 @@ from http import HTTPStatus
 
 import pytest
 
-from megamarket.utils.testing import generate_offer, generate_response_offer, import_data, get_node_statistic, \
+from megamarket.utils.testing import generate_offer, generate_response_offer, import_data, \
+    get_node_statistic, \
     compare_unit_lists, generate_category, generate_response_category
 
 date = datetime.datetime.now()
@@ -20,7 +21,8 @@ CASES = [
             ),
         ],
         [
-            generate_response_offer(unit_id='o-1', name='o-1', price=123, date=date, include_children=False)
+            generate_response_offer(unit_id='o-1', name='o-1', price=123, date=date,
+                                    include_children=False)
         ]
     ),
     (
@@ -46,9 +48,15 @@ CASES = [
             )
         ],
         [
-            generate_response_offer(unit_id='o-1', name='o-1', price=123, date=date - datetime.timedelta(hours=3), include_children=False),
-            generate_response_offer(unit_id='o-1', name='o-1', price=246, date=date - datetime.timedelta(hours=2), include_children=False),
-            generate_response_offer(unit_id='o-1', name='o-2', price=246, date=date - datetime.timedelta(hours=1), include_children=False),
+            generate_response_offer(unit_id='o-1', name='o-1', price=123,
+                                    date=date - datetime.timedelta(hours=3),
+                                    include_children=False),
+            generate_response_offer(unit_id='o-1', name='o-1', price=246,
+                                    date=date - datetime.timedelta(hours=2),
+                                    include_children=False),
+            generate_response_offer(unit_id='o-1', name='o-2', price=246,
+                                    date=date - datetime.timedelta(hours=1),
+                                    include_children=False),
         ]
     ),
     (
@@ -75,18 +83,23 @@ CASES = [
         ],
         [
             generate_response_category(
-                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=3), include_children=False
+                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=3),
+                include_children=False
             ),
             generate_response_category(
-                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=2), include_children=False,
+                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=2),
+                include_children=False,
                 children=[
-                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=2), price=123321)
+                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=2),
+                                            price=123321)
                 ]
             ),
             generate_response_category(
-                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=1), include_children=False,
+                unit_id='c-1', name='c-1', date=date - datetime.timedelta(hours=1),
+                include_children=False,
                 children=[
-                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=1), price=123321)
+                    generate_response_offer(unit_id='o-1', date=date - datetime.timedelta(hours=1),
+                                            price=123321)
                 ]
             ),
         ]

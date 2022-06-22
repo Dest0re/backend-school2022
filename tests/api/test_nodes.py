@@ -4,7 +4,7 @@ from http import HTTPStatus
 import pytest
 
 from megamarket.utils.testing import generate_offer, generate_response_offer, get_unit, import_data, \
-    normalize_response_unit, generate_category, generate_response_category, compare_units
+    generate_category, generate_response_category, compare_units
 
 date = datetime.now()
 
@@ -33,7 +33,8 @@ CASES = [
                     unit_id='category-2', name='category-2', date=date, parent_id='category-1',
                     children=[
                         generate_response_offer(
-                            unit_id='offer-1', name='offer-1', date=date, parent_id='category-2', price=19999
+                            unit_id='offer-1', name='offer-1', date=date, parent_id='category-2',
+                            price=19999
                         )
                     ]
                 )
@@ -60,8 +61,10 @@ CASES = [
         generate_response_category(
             unit_id='category-1', name='category-1', date=date,
             children=[
-                generate_response_offer(unit_id='offer-1', name='offer-1', price=20, parent_id='category-1', date=date),
-                generate_response_offer(unit_id='offer-2', name='offer-2', price=10, parent_id='category-1', date=date),
+                generate_response_offer(unit_id='offer-1', name='offer-1', price=20,
+                                        parent_id='category-1', date=date),
+                generate_response_offer(unit_id='offer-2', name='offer-2', price=10,
+                                        parent_id='category-1', date=date),
             ]
         )
     ),
@@ -85,7 +88,8 @@ CASES = [
                     unit_id='category-2', name='category-2', date=date, parent_id='category-1',
                     children=[
                         generate_response_offer(
-                            unit_id='offer-2', name='offer-2', date=date, parent_id='category-2', price=10
+                            unit_id='offer-2', name='offer-2', date=date, parent_id='category-2',
+                            price=10
                         )
                     ]
                 )

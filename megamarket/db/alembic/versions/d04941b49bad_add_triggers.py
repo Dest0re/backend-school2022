@@ -15,18 +15,19 @@ depends_on = None
 
 CREATE_CHECK_RELATIONSHIP_TRIGGER = """
 CREATE OR REPLACE FUNCTION f_check_relationship()
-    RETURNS TRIGGER 
+    RETURNS TRIGGER
     LANGUAGE plpgsql AS
 $func$
 BEGIN
     IF 'OFFER' IN (
-        SELECT type 
+        SELECT type
         FROM shop_unit_revisions
         WHERE shop_unit_id = NEW.parent_id
         ORDER BY date DESC
         LIMIT 1
     ) THEN
-        RAISE EXCEPTION USING HINT = 'Offer cannot be a parent', ERRCODE = 'object_not_in_prerequisite_state';
+        RAISE EXCEPTION USING HINT = 'Offer cannot be a parent',
+            ERRCODE = 'object_not_in_prerequisite_state';
     END IF;
 
     RETURN NEW;
@@ -45,7 +46,6 @@ DROP TRIGGER t_check_relationship ON relations;
 DROP FUNCTION f_check_relationship();
 """
 
-
 CREATE_DELETE_CHILDREN_TRIGGER = """
 CREATE OR REPLACE FUNCTION f_delete_children()
     RETURNS TRIGGER
@@ -56,16 +56,17 @@ BEGIN
         WITH actual_parent_ids AS (
             WITH actual_revision_dates AS (
                 SELECT MAX(date) AS max_date, shop_unit_id AS child_id
-                FROM 
+                FROM
                     relations
                     INNER JOIN shop_unit_revisions sur ON relations.child_revision_id = sur.id
                 GROUP BY sur.shop_unit_id
             )
             SELECT shop_unit_revisions.shop_unit_id AS child_id, parent_id
-            FROM 
+            FROM
                 shop_unit_revisions
-                INNER JOIN actual_revision_dates ard ON shop_unit_revisions.shop_unit_id = ard.child_id 
-                    AND shop_unit_revisions.date = ard.max_date
+                INNER JOIN actual_revision_dates ard
+                    ON shop_unit_revisions.shop_unit_id = ard.child_id
+                        AND shop_unit_revisions.date = ard.max_date
                 INNER JOIN relations ON relations.child_revision_id = shop_unit_revisions.id
         )
         SELECT child_id
@@ -73,7 +74,7 @@ BEGIN
         WHERE parent_id = OLD.id
     )
     DELETE FROM shop_unit_ids WHERE id IN (SELECT child_id FROM tmp);
-    
+
     RETURN OLD;
 
 END
@@ -85,12 +86,10 @@ FOR EACH ROW
 EXECUTE PROCEDURE f_delete_children();
 """
 
-
 DROP_DELETE_CHILDREN_TRIGGER = """
 DROP TRIGGER t_delete_children ON shop_unit_ids;
 DROP FUNCTION f_delete_children();
 """
-
 
 CREATE_CHECK_UNIT_TYPE_CHANGE_TRIGGER = """
 CREATE OR REPLACE FUNCTION f_check_unit_type_change()
@@ -115,7 +114,7 @@ BEGIN
             RAISE EXCEPTION 'Unit type cannot be changed';
         END IF;
     END IF;
-    
+
     RETURN NEW;
 END
 $func$;

@@ -1,7 +1,8 @@
 from enum import Enum, unique
 
 from sqlalchemy import (
-    Column, Table, MetaData, Integer, String, ForeignKey, Enum as PgEnum, DateTime, PrimaryKeyConstraint,
+    Column, Table, MetaData, Integer, String, ForeignKey, Enum as PgEnum, DateTime,
+    PrimaryKeyConstraint,
     UniqueConstraint
 )
 
@@ -30,12 +31,12 @@ shop_unit_ids_table = Table(
     Column('id', String, primary_key=True),
 )
 
-
 shop_unit_revisions_table = Table(
     'shop_unit_revisions', metadata,
     Column('id', Integer, primary_key=True, autoincrement=True),
     Column('date', DateTime, nullable=False),
-    Column('shop_unit_id', String, ForeignKey('shop_unit_ids.id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False),
+    Column('shop_unit_id', String,
+           ForeignKey('shop_unit_ids.id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False),
     Column('name', String, nullable=False),
     Column('price', Integer, nullable=True),
     Column('type', PgEnum(ShopUnitType, name='shop_unit_type'), nullable=False),
@@ -44,8 +45,11 @@ shop_unit_revisions_table = Table(
 
 relations_table = Table(
     'relations', metadata,
-    Column('child_revision_id', Integer, ForeignKey('shop_unit_revisions.id', ondelete='CASCADE', onupdate='RESTRICT'), nullable=False),
-    Column('parent_id', String, ForeignKey('shop_unit_ids.id', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False),
+    Column('child_revision_id', Integer,
+           ForeignKey('shop_unit_revisions.id', ondelete='CASCADE', onupdate='RESTRICT'),
+           nullable=False),
+    Column('parent_id', String,
+           ForeignKey('shop_unit_ids.id', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False),
     UniqueConstraint('child_revision_id', 'parent_id'),
     PrimaryKeyConstraint('child_revision_id', name='pk__relations'),
 )

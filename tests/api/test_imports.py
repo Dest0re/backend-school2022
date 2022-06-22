@@ -4,7 +4,8 @@ from http import HTTPStatus
 import pytest
 
 from megamarket.utils.pg import MAX_INTEGER
-from megamarket.utils.testing import generate_offer, generate_category, generate_shop_units, import_data
+from megamarket.utils.testing import generate_offer, generate_category, generate_shop_units, \
+    import_data
 
 LONGEST_STR = 'ё' * 256
 CASES = [
@@ -64,7 +65,7 @@ CASES = [
 
 @pytest.mark.parametrize('units,expected_status', CASES)
 async def test_imports(api_client, units, expected_status):
-    response = await import_data(
+    await import_data(
         api_client,
         units,
         expected_status=expected_status,
@@ -72,11 +73,9 @@ async def test_imports(api_client, units, expected_status):
 
 
 async def test_future_request(api_client):
-    response = await import_data(
+    await import_data(
         api_client,
         [],
         date=datetime.datetime(2030, 1, 1),
         expected_status=HTTPStatus.BAD_REQUEST,
     )
-
-

@@ -13,7 +13,8 @@ from megamarket.api.schema import ShopUnitSchema, ShopUnitStatisticsRequestParam
 from .base import BaseView
 from ...db.schema import ShopUnitType, shop_unit_revisions_table
 from ...utils.pg import max_query_len_with
-from ...utils.streamers import ShopUnitStreamer, ShopCategoryStreamer, shop_unit_streamer_from_record, do_stream
+from ...utils.streamers import ShopUnitStreamer, ShopCategoryStreamer, \
+    shop_unit_streamer_from_record, do_stream
 
 
 class GetNodeStatistic(AsyncIterable):
@@ -113,5 +114,6 @@ class NodeView(BaseView):
                 raise HTTPNotFound()
 
         return Response(body=GetNodeStatistic(unit_id, self.pg, 10,
-                                              params['dateStart'] if 'dateStart' in params else None,
+                                              params[
+                                                  'dateStart'] if 'dateStart' in params else None,
                                               params['dateEnd'] if 'dateEnd' in params else None))
