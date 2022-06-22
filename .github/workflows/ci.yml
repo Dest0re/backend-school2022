@@ -45,6 +45,6 @@ jobs:
         with:
           username: ${{ secrets.REGISTRY_LOGIN }}
           password: ${{ secrets.REGISTRY_TOKEN }}
-          repository: dest0re/backend-school2022
+          repository: dest0re/megamarket
           target: api
           tags: 0.0.1, latest
