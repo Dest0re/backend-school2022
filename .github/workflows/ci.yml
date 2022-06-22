@@ -6,45 +6,45 @@ on:
   pull_request:
     branches: [master]
 
-  jobs:
-    test:
-      runs-on: ubuntu-latest
+jobs:
+  test:
+    runs-on: ubuntu-latest
 
-      services:
-        postgres:
-          image: docker://postgres
-          ports:
-            - 5432:5432
-          env:
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: strngpsswrd
-            POSTGRES_DB: megamarket
+    services:
+      postgres:
+        image: docker://postgres
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: strngpsswrd
+          POSTGRES_DB: megamarket
 
-      steps:
-        - uses: actions/checkout@v2
-        - name: test
-          uses: docker://snakepacker/python:all
-          env:
-            CI_ANALYZER_PG_URL: postgresql://user:strngpsswrd@postgres/megamarket
-          with:
-            args: /bin/bash -c "pip install -U '.[dev]' && pylama && wait-for-port postgres:5432 && pytest -vv --cov=analyzer --cov-report=term-missing tests"
+    steps:
+      - uses: actions/checkout@v2
+      - name: test
+        uses: docker://snakepacker/python:all
+        env:
+          CI_ANALYZER_PG_URL: postgresql://user:strngpsswrd@postgres/megamarket
+        with:
+          args: /bin/bash -c "pip install -U '.[dev]' && pylama && wait-for-port postgres:5432 && pytest -vv --cov=analyzer --cov-report=term-missing tests"
 
-    publish:
-      if: github.event.name == 'push' && github.ref == 'refs/heads/master'
-      runs-on: ubuntu-latest
-      needs: test
-      steps:
-        - uses: actions/checkout@v2
-        - name: sdist
-          uses: docker://snakepacker/python:all
-          with:
-            args: make sdist
+  publish:
+    if: github.event.name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: sdist
+        uses: docker://snakepacker/python:all
+        with:
+          args: make sdist
 
-        - name: build-push
-          uses: docker/build-push-action@v1
-          with:
-            username: ${{ secrets.REGISTRY_LOGIN }}
-            password: ${{ secrets.REGISTRY_TOKEN }}
-            repository: dest0re/backend-school2022
-            target: api
-            tags: 0.0.1, latest
+      - name: build-push
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.REGISTRY_LOGIN }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+          repository: dest0re/backend-school2022
+          target: api
+          tags: 0.0.1, latest
