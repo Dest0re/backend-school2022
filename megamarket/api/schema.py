@@ -52,6 +52,12 @@ class ShopUnitImportSchema(Schema):
         if data['parentId'] is not None and data['parentId'] == data['id']:
             raise ValidationError('Parent cannot be itself')
 
+    @validates_schema
+    def validate_offer_price(self, data, **_):
+        if data['type'] == 'OFFER':
+            if 'price' not in data or data['price'] is None:
+                raise ValidationError('Offer should have a price')
+
 
 class ShopUnitImportRequestSchema(Schema):
     items = List(Nested(ShopUnitImportSchema()), required=False)

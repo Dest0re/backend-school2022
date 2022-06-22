@@ -60,8 +60,9 @@ class ShopUnitStreamer(AsyncIterable):
 
     def __init__(self, unit_id, pg: AsyncConnection,
                  from_date: datetime | None = None,
-                 to_date: datetime = datetime.now(),
-                 stream_children: bool = True):
+                 to_date: datetime | None = datetime.now(),
+                 stream_children: bool = True,
+                 stream_self: bool = True):
         self._unit_id = unit_id
         self._pg = pg
         self._price = None
@@ -70,6 +71,7 @@ class ShopUnitStreamer(AsyncIterable):
         self._stream_children = stream_children
         self._from_date = from_date
         self._to_date = to_date
+        self._stream_self = stream_self
 
     @property
     def price(self) -> int | None:
@@ -132,7 +134,10 @@ class ShopOfferStreamer(ShopUnitStreamer):
         if self._stream_children:
             data['children'] = None
 
-        yield dumps(data)
+        if self._stream_self:
+            yield dumps(data)
+        else:
+            yield ''
 
         self._price = self_row['price']
         self._date = self_row['date']
@@ -221,8 +226,9 @@ class ShopCategoryStreamer(ShopUnitStreamer):
     def __init__(self, unit_id, pg: AsyncConnection,
                  from_date: datetime | None = None,
                  to_date: datetime | None = datetime.now(),
-                 stream_children: bool = True):
-        super(ShopCategoryStreamer, self).__init__(unit_id, pg, from_date, to_date)
+                 stream_children: bool = True,
+                 stream_self: bool = True):
+        super(ShopCategoryStreamer, self).__init__(unit_id, pg, from_date, to_date, stream_children, stream_self)
         self._state = StreamerState.INITIALIZING
         self._children = []
         self._children_done = -1
@@ -249,18 +255,22 @@ class ShopCategoryStreamer(ShopUnitStreamer):
                                                                         self._from_date, self._to_date):
                     self._children.append(shop_unit_streamer(child_type, child_id, self._pg,
                                                              self._from_date, self._to_date,
-                                                             self._stream_children))
+                                                             self._stream_children,
+                                                             stream_self=(self._stream_children and self._stream_self)))
 
                 self._state = StreamerState.RUNNING
 
                 self._date = self_row['date']
 
-                return dumps({
-                    'id': self_row['shop_unit_id'],
-                    'name': self_row['name'],
-                    'type': self_row['type'],
-                    'parentId': parent_id,
-                })[:-1] + (', "children": [' if self._stream_children else '')
+                if self._stream_self:
+                    return dumps({
+                        'id': self_row['shop_unit_id'],
+                        'name': self_row['name'],
+                        'type': self_row['type'],
+                        'parentId': parent_id,
+                    })[:-1] + (', "children": [' if self._stream_children else '')
+                else:
+                    return ''
 
             case StreamerState.RUNNING:
                 self._children_done += 1
@@ -282,8 +292,11 @@ class ShopCategoryStreamer(ShopUnitStreamer):
 
                 self._state = StreamerState.RUNNING
 
-                if self._children_done != len(self._children) - 1:
-                    return ', '
+                if self._stream_children and self._stream_self:
+                    if self._children_done != len(self._children) - 1:
+                        return ', '
+                    else:
+                        return ''
                 else:
                     return ''
 
@@ -295,12 +308,16 @@ class ShopCategoryStreamer(ShopUnitStreamer):
                 if not self._children:
                     price = None
                 else:
+                    print(self._children[0].price)
                     price = self._price // self.children_count
 
-                return (']' if self._stream_children else '') + ', ' + dumps({
-                    'price': price,
-                    'date': self._date,
-                })[1:]
+                if self._stream_self:
+                    return (']' if self._stream_children else '') + ', ' + dumps({
+                        'price': price,
+                        'date': self._date,
+                    })[1:]
+                else:
+                    return ''
 
             case StreamerState.DONE:
                 if not self._done:
@@ -313,22 +330,27 @@ class ShopCategoryStreamer(ShopUnitStreamer):
 def shop_unit_streamer(unit_type, unit_id, pg: AsyncConnection,
                        from_date: datetime | None,
                        to_date: datetime | None,
-                       stream_children=True
+                       stream_children=True,
+                       stream_self=True
                        ) -> ShopUnitStreamer:
     match unit_type:
         case ShopUnitType.OFFER:
-            return ShopOfferStreamer(unit_id, pg, from_date, to_date, stream_children=stream_children)
+            return ShopOfferStreamer(unit_id, pg, from_date, to_date, stream_children=stream_children,
+                                     stream_self=stream_self)
         case ShopUnitType.CATEGORY:
-            return ShopCategoryStreamer(unit_id, pg, from_date, to_date, stream_children=stream_children)
+            return ShopCategoryStreamer(unit_id, pg, from_date, to_date, stream_children=stream_children,
+                                        stream_self=stream_self)
 
 
 def shop_unit_streamer_from_record(unit_record, pg: AsyncConnection,
                                    from_date: datetime | None,
                                    to_date: datetime | None,
                                    stream_children=True,
+                                   stream_self: bool = True,
                                    ) -> ShopUnitStreamer:
     return shop_unit_streamer(unit_record['type'], unit_record['shop_unit_id'], pg,
-                              from_date, to_date, stream_children=stream_children)
+                              from_date, to_date, stream_children=stream_children,
+                              stream_self=stream_self)
 
 
 async def do_stream(streamer):
