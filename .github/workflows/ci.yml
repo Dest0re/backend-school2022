@@ -25,7 +25,7 @@ jobs:
       - name: test
         uses: docker://snakepacker/python:all
         env:
-          CI_ANALYZER_PG_URL: postgresql://user:strngpsswrd@postgres/megamarket
+          CI_MEGAMARKET_PG_URL: postgresql://user:strngpsswrd@postgres/megamarket
         with:
           args: /bin/bash -c "pip install -U '.[dev]' && pylama && wait-for-port postgres:5432 && pytest -vv --cov=analyzer --cov-report=term-missing tests"
 
