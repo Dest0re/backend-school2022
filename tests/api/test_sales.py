@@ -1,6 +1,7 @@
 import datetime
 
-from megamarket.utils.testing import generate_offer, generate_response_offer, get_sales, import_data, compare_unit_lists
+from megamarket.utils.testing import generate_offer, generate_response_offer, get_sales, \
+    import_data, compare_unit_lists
 
 date = datetime.datetime.now()
 
@@ -23,7 +24,8 @@ async def test_single_sale(api_client):
 
     resp = await get_sales(api_client, date)
 
-    expected_unit = [generate_response_offer(unit_id='1', name='1', price=123321, date=date, include_children=False)]
+    expected_unit = [generate_response_offer(unit_id='1', name='1', price=123321, date=date,
+                                             include_children=False)]
 
     assert compare_unit_lists(resp, expected_unit)
 
@@ -38,8 +40,10 @@ async def test_multiple_sales(api_client):
     resp = await get_sales(api_client, date)
 
     expected_units = [
-        generate_response_offer(unit_id='1', name='1', price=123321, date=date, include_children=False),
-        generate_response_offer(unit_id='2', name='2', price=123321, date=date - datetime.timedelta(hours=1),
+        generate_response_offer(unit_id='1', name='1', price=123321, date=date,
+                                include_children=False),
+        generate_response_offer(unit_id='2', name='2', price=123321,
+                                date=date - datetime.timedelta(hours=1),
                                 include_children=False)
     ]
 
@@ -67,7 +71,8 @@ async def test_duplicate_update(api_client):
     resp = await get_sales(api_client, date)
 
     expected_units = [
-        generate_response_offer(unit_id='1', name='1', price=123321, date=date, include_children=False),
+        generate_response_offer(unit_id='1', name='1', price=123321, date=date,
+                                include_children=False),
     ]
 
     assert compare_unit_lists(resp, expected_units)

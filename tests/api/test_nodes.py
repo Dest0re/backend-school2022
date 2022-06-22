@@ -3,8 +3,10 @@ from http import HTTPStatus
 
 import pytest
 
-from megamarket.utils.testing import generate_offer, generate_response_offer, get_unit, import_data, \
+from megamarket.utils.testing import (
+    generate_offer, generate_response_offer, get_unit, import_data,
     generate_category, generate_response_category, compare_units
+)
 
 date = datetime.now()
 

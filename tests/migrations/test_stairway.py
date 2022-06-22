@@ -17,7 +17,7 @@ def get_revisions():
 
     revisions = list(revisions_dir.walk_revisions('base', 'heads'))
     revisions.reverse()
-    
+
     return revisions
 
 
