@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   test:
@@ -30,7 +30,7 @@ jobs:
           args: /bin/bash -c "pip install -U '.[dev]' && pylama && wait-for-port postgres:5432 && pytest -vv --cov=analyzer --cov-report=term-missing tests"
 
   publish:
-    if: github.event.name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event.name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: test
     steps:
