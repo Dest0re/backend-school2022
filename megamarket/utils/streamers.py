@@ -1,3 +1,10 @@
+"""
+Стримеры предназначены для отправки данных о товаре по частям в формате JSON.
+Категории могут иметь бесконечное количество детей, очень странно держать это всё в памяти.
+Мне показалось более правильным отправлять информацию кусочками, а в памяти хранить только
+то, что требуется для вычислений, например цены.
+"""
+
 from datetime import datetime
 from enum import Enum
 from typing import AsyncIterable, List
@@ -15,6 +22,9 @@ class EndOfStream:
 
 
 class ShopUnitStreamer(AsyncIterable):
+    """
+    Базовый класс стримера.
+    """
     @classmethod
     async def get_unit_record_by_id(cls, unit_id, pg: AsyncConnection,
                                     from_date: datetime | None,
@@ -101,6 +111,10 @@ class ShopUnitStreamer(AsyncIterable):
 
 
 class ShopOfferStreamer(ShopUnitStreamer):
+    """
+    Класс стриммера офферов.
+    Отправляет всю информацию об оффере в одной пачке, сохраняя информацию о цене.
+    """
     type = ShopUnitType.OFFER
 
     @property
@@ -154,6 +168,11 @@ class StreamerState(Enum):
 
 
 class ShopCategoryStreamer(ShopUnitStreamer):
+    """
+    Класс стримера категорий.
+    Стример получает дочерние категории, отдаёт их итератору и ждёт, пока они закончат стриминг.
+    После этого высчитывает свою цену и дату обновления, отдаёт информацию о себе.
+    """
     type = ShopUnitType.CATEGORY
 
     @property
@@ -250,9 +269,6 @@ class ShopCategoryStreamer(ShopUnitStreamer):
                 if not self_row:
                     raise KeyError
 
-                parent_id = await self.get_parent_id_by_unit_id(self._unit_id, self._pg,
-                                                                self._from_date, self._to_date)
-
                 for child_id, child_type in await self.get_children_ids(self._unit_id, self._pg,
                                                                         self._from_date,
                                                                         self._to_date):
@@ -267,15 +283,13 @@ class ShopCategoryStreamer(ShopUnitStreamer):
 
                 self._state = StreamerState.RUNNING
 
-                self._date = self_row['date']
-
                 if self._stream_self:
-                    return dumps({
-                        'id': self_row['shop_unit_id'],
-                        'name': self_row['name'],
-                        'type': self_row['type'],
-                        'parentId': parent_id,
-                    })[:-1] + (', "children": [' if self._stream_children else '')
+                    stream_string = '{'
+
+                    if self._stream_children:
+                        stream_string += '"children": ['
+
+                    return stream_string
                 else:
                     return ''
 
@@ -309,20 +323,41 @@ class ShopCategoryStreamer(ShopUnitStreamer):
 
             case StreamerState.FINALIZING:
                 self._state = StreamerState.DONE
-                self._date = max(self._date,
-                                 max((child.date for child in self._children), default=self._date))
 
-                if not self._children:
-                    price = None
-                else:
-                    print(self._children[0].price)
-                    price = self._price // self.children_count
+                self_row = await self.get_unit_record_by_id(self._unit_id, self._pg,
+                                                            self._from_date, self._to_date)
+
+                self._date = max(self_row['date'],
+                                 max((child.date for child in self._children),
+                                     default=self_row['date']))
 
                 if self._stream_self:
-                    return (']' if self._stream_children else '') + ', ' + dumps({
-                        'price': price,
-                        'date': self._date,
+                    if not self._children:
+                        price = None
+                    else:
+                        price = self._price // self.children_count
+
+                    if not self_row:
+                        raise KeyError
+
+                    parent_id = await self.get_parent_id_by_unit_id(self._unit_id, self._pg,
+                                                                    self._from_date, self._to_date)
+
+                    stream_string = ''
+
+                    if self._stream_children:
+                        stream_string += '], '
+
+                    stream_string += dumps({
+                        'id': self_row['shop_unit_id'],
+                        'name': self_row['name'],
+                        'type': self_row['type'],
+                        'parentId': parent_id,
+                        "price": price,
+                        "date": self._date,
                     })[1:]
+
+                    return stream_string
                 else:
                     return ''
 
@@ -362,7 +397,15 @@ def shop_unit_streamer_from_record(unit_record, pg: AsyncConnection,
                               stream_self=stream_self)
 
 
-async def do_stream(streamer):
+async def do_stream(streamer: ShopUnitStreamer) -> AsyncIterable[str]:
+    """
+    Осуществляет стриминг.
+
+    :param streamer: Стример
+    """
+
+    # Чтобы избежать переполнения стека вызовов рекурсивными операциями,
+    # используется локальный стек.
     stack = [streamer]
     while stack:
         async for data in stack[-1]:
