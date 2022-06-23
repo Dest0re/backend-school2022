@@ -4,6 +4,7 @@ from collections.abc import AsyncIterable
 from datetime import datetime, timedelta
 
 from aiohttp.web import Response
+from aiohttp_apispec import querystring_schema
 from aiohttp_apispec.decorators import response_schema
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -77,11 +78,10 @@ class GetSalesQuery(AsyncIterable):
 class SalesView(BaseView):
     URL_PATH = r'/sales'
 
+    @querystring_schema(SalesRequestParamsSchema)
     @response_schema(schema=ShopUnitStatisticResponseSchema)
     async def get(self):
-        params = SalesRequestParamsSchema().load(self.request.query)
-
-        to_date = params['date']
+        to_date = self.request['querystring']['date']
         from_date = to_date - timedelta(days=1)
 
         return Response(

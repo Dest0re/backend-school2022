@@ -5,11 +5,13 @@ from datetime import datetime
 
 from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp_apispec import match_info_schema, querystring_schema
 from aiohttp_apispec.decorators import response_schema
 from aiomisc import chunk_list
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncConnection
 
-from megamarket.api.schema import ShopUnitSchema, ShopUnitStatisticsRequestParamsSchema
+from megamarket.api.schema import ShopUnitSchema, ShopUnitStatisticsRequestParamsSchema, \
+    IdMatchInfoRequestSchema
 from .base import BaseView
 from ...db.schema import ShopUnitType, shop_unit_revisions_table
 from ...utils.pg import max_query_len_with
@@ -104,16 +106,19 @@ class GetNodeStatistic(AsyncIterable):
 class NodeView(BaseView):
     URL_PATH = r'/node/{id:[\da-zA-Z\-]+}/statistic'
 
+    @match_info_schema(IdMatchInfoRequestSchema)
+    @querystring_schema(ShopUnitStatisticsRequestParamsSchema)
     @response_schema(schema=ShopUnitSchema)
     async def get(self):
-        unit_id = self.request.match_info['id']
-        params = ShopUnitStatisticsRequestParamsSchema().load(self.request.query)
+        unit_id = self.request['match_info']['id']
+        querystring = self.request['querystring']
+        date_start = querystring['dateStart'] if 'dateStart' in querystring else None
+        date_end = querystring['dateEnd'] if 'dateEnd' in querystring else None
 
         async with self.pg.begin() as conn:
             if not await ShopUnitStreamer.get_unit_record_by_id(unit_id, conn, None, None):
                 raise HTTPNotFound()
 
-        return Response(body=GetNodeStatistic(unit_id, self.pg, 10,
-                                              params[
-                                                  'dateStart'] if 'dateStart' in params else None,
-                                              params['dateEnd'] if 'dateEnd' in params else None))
+        return Response(
+            body=GetNodeStatistic(unit_id, self.pg, 10, date_start, date_end)
+        )

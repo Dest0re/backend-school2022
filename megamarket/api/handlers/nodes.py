@@ -5,11 +5,12 @@ from datetime import datetime
 
 from aiohttp.web import Response
 from aiohttp.web_exceptions import HTTPNotFound
+from aiohttp_apispec import match_info_schema
 from aiohttp_apispec.decorators import response_schema
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from .base import BaseView
-from megamarket.api.schema import ShopUnitSchema
+from megamarket.api.schema import ShopUnitSchema, IdMatchInfoRequestSchema
 from ...utils.streamers import ShopUnitStreamer, shop_unit_streamer_from_record, do_stream
 
 
@@ -48,9 +49,10 @@ class GetShopUnitQuery(AsyncIterable):
 class NodesView(BaseView):
     URL_PATH = r'/nodes/{id:[\da-zA-Z\-]+}'
 
+    @match_info_schema(IdMatchInfoRequestSchema)
     @response_schema(schema=ShopUnitSchema)
     async def get(self):
-        unit_id = self.request.match_info['id']
+        unit_id = self.request['match_info']['id']
 
         async with self.pg.begin() as conn:
             if not await ShopUnitStreamer.get_unit_record_by_id(unit_id, conn, None, None):

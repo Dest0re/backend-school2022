@@ -77,6 +77,10 @@ class ShopUnitImportRequestSchema(Schema):
                 raise ValidationError('Date cannot be in future')
 
 
+class IdMatchInfoRequestSchema(Schema):
+    id = String(required=True, validate=Length(min=1))
+
+
 class SalesRequestParamsSchema(Schema):
     date = DateTime(required=True, format=DATETIME_FORMAT)
 
