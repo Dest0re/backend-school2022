@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from http import HTTPStatus
 
-from locust import HttpUser, TaskSet, task, constant
+from locust import TaskSet, task, constant, HttpUser
 from locust.exception import RescheduleTask
 
 from megamarket.api.handlers import NodesView, NodeView, DeleteView
@@ -73,5 +73,5 @@ class MegamarketTaskSet(TaskSet):
 
 
 class WebsiteUser(HttpUser):
-    tasks = {MegamarketTaskSet: 1}
+    task_set = MegamarketTaskSet
     wait_time = constant(1)
