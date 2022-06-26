@@ -30,7 +30,10 @@ docker run dest0re/megamarket megamarket-api --help
 
 
 ## Как это развернуть?
-Пока никак, я над этим работаю
+```shell
+cd deploy
+ansible-playbook -i hosts.ini -K playbook.yaml
+```
 
 ## Разработка
 ### Makefile
