@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from http import HTTPStatus
 
-from locust import TaskSet, task, constant, HttpUser
+from locust import TaskSet, task, constant, HttpUser, SequentialTaskSet
 from locust.exception import RescheduleTask
 
 from megamarket.api.handlers import NodesView, NodeView, DeleteView
@@ -10,10 +10,12 @@ from megamarket.api.schema import DATETIME_FORMAT
 from megamarket.utils.testing import generate_shop_units, url_for
 
 
-class MegamarketTaskSet(TaskSet):
+class MegamarketTaskSet(SequentialTaskSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.round = 0
+        self.dataset = self.make_dataset()
 
     @staticmethod
     def make_dataset():
@@ -61,17 +63,39 @@ class MegamarketTaskSet(TaskSet):
         return self.request('DELETE', url, HTTPStatus.OK)
 
     @task
-    def workflow(self):
-        self.round += 1
-        dataset = self.make_dataset()
+    def create_import_task(self):
+        self.create_import(self.dataset)
 
-        self.create_import(dataset)
-        self.get_unit(dataset[0]['id'])
+    @task
+    def get_unit_task(self):
+        self.get_unit(self.dataset[0]['id'])
+
+    @task
+    def get_sales_task(self):
         self.get_sales(datetime.now().strftime(DATETIME_FORMAT))
-        self.get_node_statistics(dataset[0]['id'])
-        self.delete_node(dataset[0]['id'])
+
+    @task
+    def get_node_statistics_task(self):
+        self.get_node_statistics(self.dataset[0]['id'])
+
+    @task
+    def delete_node_task(self):
+        self.delete_node(self.dataset[0]['id'])
+
+    # @task
+    # def workflow(self):
+    #     self.round += 1
+    #     dataset = self.make_dataset()
+    #
+    #     self.create_import(dataset)
+    #     self.get_unit(dataset[0]['id'])
+    #     self.get_sales(datetime.now().strftime(DATETIME_FORMAT))
+    #     self.get_node_statistics(dataset[0]['id'])
+    #     self.delete_node(dataset[0]['id'])
 
 
 class WebsiteUser(HttpUser):
-    task_set = MegamarketTaskSet
+    tasks = [MegamarketTaskSet]
     wait_time = constant(1)
+
+

@@ -103,7 +103,7 @@ def generate_device_name():
 
 
 def generate_category_name():
-    return CATEGORIES.pop(random.randint(0, len(CATEGORIES) - 1))
+    return CATEGORIES[random.randint(0, len(CATEGORIES) - 1)]
 
 
 def generate_shop_unit(
