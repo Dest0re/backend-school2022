@@ -32,7 +32,7 @@ class GetShopUnitQuery(AsyncIterable):
                                                                 self._from_date, self._to_date)
 
             if not unit:
-                raise KeyError
+                raise HTTPNotFound()
 
             unit = shop_unit_streamer_from_record(unit, conn,
                                                   self._from_date, self._to_date,
