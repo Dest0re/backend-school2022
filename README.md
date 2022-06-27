@@ -21,6 +21,8 @@ docker run -it -p 8081:8081 \
     dest0re/megamarket megamarket-api
 ```
 
+Документация доступна на http://localhost:8081/doc
+
 ### Получить список команд:
 ```shell
 docker run dest0re/megamarket megamarket-db --help
